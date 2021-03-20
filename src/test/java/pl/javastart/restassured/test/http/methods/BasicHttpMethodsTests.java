@@ -31,6 +31,7 @@ public class BasicHttpMethodsTests {
         given().log().all().body(pet).contentType("application/json")
                 .when().post("https://swaggerpetstore.przyklady.javastart.pl/v2/pet")
                 .then().log().all().statusCode(200);
+
     }
 
     @Test
