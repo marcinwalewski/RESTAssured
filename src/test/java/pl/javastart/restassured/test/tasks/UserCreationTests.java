@@ -4,6 +4,7 @@ import org.testng.annotations.Test;
 import pl.javastart.main.pojo.user.User;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 public class UserCreationTests extends TestBase {
 
@@ -11,7 +12,6 @@ public class UserCreationTests extends TestBase {
     public void givenCorrectUserDataWhenCreateUserThenUserIsCreatedTest() {
 
         User user = new User();
-
         user.setId(666);
         user.setUsername("mwalewski");
         user.setFirstName("Marcin");
@@ -21,16 +21,27 @@ public class UserCreationTests extends TestBase {
         user.setPhone("+123456789");
         user.setUserStatus(1);
 
-        given().log().all().body(user).contentType("application/json")
+        given().body(user).contentType("application/json")
                 .when().post("user")
-                .then().log().all().statusCode(200);
+                .then()
+                .assertThat().body("code", equalTo(200))
+                .assertThat().body("type", equalTo("unknown"))
+                .assertThat().body("message", equalTo(user.getId().toString()))
+                .assertThat().statusCode(200);
 
-        given().log().all()
-                .contentType("application/json")
+        given().contentType("application/json")
                 .pathParam("username", user.getUsername())
                 .when().get("user/{username}")
-                .then().log().all().statusCode(200);
+                .then()
+                .assertThat().body("id", equalTo(user.getId()))
+                .assertThat().body("username", equalTo(user.getUsername()))
+                .assertThat().body("firstName", equalTo(user.getFirstName()))
+                .assertThat().body("lastName", equalTo(user.getLastName()))
+                .assertThat().body("email", equalTo(user.getEmail()))
+                .assertThat().body("password", equalTo(user.getPassword()))
+                .assertThat().body("phone", equalTo(user.getPhone()))
+                .assertThat().body("userStatus", equalTo(user.getUserStatus()))
+                .assertThat().statusCode(200);
 
     }
-
 }

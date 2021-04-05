@@ -22,22 +22,26 @@ public class UserUpdateTests extends TestBase {
         user.setUserStatus(1);
 
         // Create user - POST
-        given().log().method().body(user).contentType("application/json")
+        given().contentType("application/json")
+                .body(user)
                 .when().post("user")
-                .then().log().status().statusCode(200);
+                .then().statusCode(200);
 
         //Update user = PUT
         user.setFirstName("Konstanty");
         user.setLastName("Siekierkowski");
 
-        given().log().method().body(user).contentType("application/json").pathParam("username", user.getUsername())
+        given().body(user)
+                .contentType("application/json")
+                .pathParam("username", user.getUsername())
                 .when().put("user/{username}")
-                .then().log().status().statusCode(200);
+                .then().statusCode(200);
 
         //CHeck user - GET
-        given().log().method().contentType("application/json").pathParam("username", user.getUsername())
+        given().contentType("application/json")
+                .pathParam("username", user.getUsername())
                 .when().get("user/{username}")
-                .then().log().all().statusCode(200);
+                .then().statusCode(200);
 
     }
 }
