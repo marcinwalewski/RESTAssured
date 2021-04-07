@@ -1,17 +1,35 @@
 package pl.javastart.restassured.test.tasks;
 
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 import org.testng.annotations.Test;
 import pl.javastart.main.pojo.user.User;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 public class UserUpdateTests extends TestBase {
 
     @Test
     public void givenCorrectUserDataWhenFirstNameLastNameAreUpdatedThenUserDataIsUpdatedTest(){
 
-        User user = new User();
+        //Tworzymy specyfikację żądania, jest ona następnie użyta dla wszystkich żądań
+        RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
+        requestSpecBuilder.setContentType("application/json");
+        RequestSpecification defaultRequestSpecification = requestSpecBuilder.build();
 
+        // Tworzymy specifikację odpowiedzi dla żądań metodą POST oraz PUT
+        ResponseSpecBuilder postResponseSpecBuilder = new ResponseSpecBuilder();
+        postResponseSpecBuilder
+                .expectBody("code", equalTo(200))
+                .expectBody("type", equalTo("unknown"))
+                .expectBody("message", equalTo("445"))
+                .expectStatusCode(200);
+        ResponseSpecification userCreationResponseSpecification = postResponseSpecBuilder.build();
+
+        User user = new User();
         user.setId(666);
         user.setUsername("l.walewski");
         user.setFirstName("Leon");
@@ -22,26 +40,40 @@ public class UserUpdateTests extends TestBase {
         user.setUserStatus(1);
 
         // Create user - POST
-        given().contentType("application/json")
+        given().spec(defaultRequestSpecification)
                 .body(user)
                 .when().post("user")
-                .then().statusCode(200);
+                .then().assertThat().spec(userCreationResponseSpecification);
 
         //Update user = PUT
         user.setFirstName("Konstanty");
         user.setLastName("Siekierkowski");
 
-        given().body(user)
-                .contentType("application/json")
+        given().spec(defaultRequestSpecification)
                 .pathParam("username", user.getUsername())
+                .body(user)
                 .when().put("user/{username}")
-                .then().statusCode(200);
+                .then().assertThat().spec(userCreationResponseSpecification);
 
-        //CHeck user - GET
-        given().contentType("application/json")
+        // Tworzymy specyfikację odpowiedzi dla żądania metodą GET
+        ResponseSpecBuilder updateResponseSpecBuilder = new ResponseSpecBuilder();
+        updateResponseSpecBuilder
+                .expectBody("id", equalTo(445))
+                .expectBody("username", equalTo("firstuser"))
+                .expectBody("firstName", equalTo("Adam"))
+                .expectBody("lastName", equalTo("Malinowski"))
+                .expectBody("email", equalTo("krzysztof@test.com"))
+                .expectBody("password", equalTo("password"))
+                .expectBody("phone", equalTo("+123456789"))
+                .expectBody("userStatus", equalTo(123))
+                .expectStatusCode(200);
+        ResponseSpecification getResponseSpecification = updateResponseSpecBuilder.build();
+
+        //Check user - GET
+        given().spec(defaultRequestSpecification)
                 .pathParam("username", user.getUsername())
                 .when().get("user/{username}")
-                .then().statusCode(200);
+                .then().assertThat().spec(getResponseSpecification);
 
     }
 }
